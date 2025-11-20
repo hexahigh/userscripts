@@ -6,6 +6,9 @@
 // @author       Boofdev
 // @match        *://*/*
 // @grant        none
+// @updateURL   https://us.080609.xyz/scripts/no-nodownload.user.js
+// @downloadURL https://us.080609.xyz/scripts/no-nodownload.user.js
+// @homepageURL https://us.080609.xyz
 // ==/UserScript==
 
 (function () {
