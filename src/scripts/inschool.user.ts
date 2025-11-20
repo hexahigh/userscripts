@@ -8,7 +8,7 @@
 // @description Fixes various issues on InSchool
 // @updateURL   https://us.080609.xyz/scripts/inschool.user.js
 // @downloadURL https://us.080609.xyz/scripts/inschool.user.js
-// @homepageURL https://github.com/hexahigh/userscripts
+// @homepageURL https://us.080609.xyz
 // ==/UserScript==
 
 import styles from './inschool.css';

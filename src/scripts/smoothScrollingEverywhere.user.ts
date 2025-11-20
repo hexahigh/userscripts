@@ -8,7 +8,7 @@
 // @description Universal smooth scrolling for (almost) all websites using Lenis
 // @updateURL   https://us.080609.xyz/scripts/smoothScrollingEverywhere.user.js
 // @downloadURL https://us.080609.xyz/scripts/smoothScrollingEverywhere.user.js
-// @homepageURL https://github.com/hexahigh/userscripts
+// @homepageURL https://us.080609.xyz
 // ==/UserScript==
 
 import Lenis from 'lenis';
