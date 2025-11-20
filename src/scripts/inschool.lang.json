@@ -1,0 +1,13 @@
+{
+    "defaultLang": "en",
+    "messages": {
+        "en": {
+            "weekWarning": "Warning: You are viewing week {viewingWeek}, but the current week is {currentWeek}.",
+            "breakDuration": "{minutes} min break"
+        },
+        "no": {
+            "weekWarning": "Advarsel: Du ser på uke {viewingWeek}, men den nåværende uken er {currentWeek}.",
+            "breakDuration": "{minutes} min pause"
+        }
+    }
+}

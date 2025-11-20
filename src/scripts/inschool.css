@@ -7,6 +7,12 @@
   height: 2px !important;
 }
 
+/* Make margins identical and smaller */
+.Timetable-Items {
+  margin-right: 4px !important;
+  margin-left: 4px !important;
+}
+
 /* Red diagonal stripes for empty timetable days */
 .empty-timetable-day {
   background: repeating-linear-gradient(45deg, #ffebee, #ffebee 10px, #ffcdd2 10px, #ffcdd2 20px) !important;

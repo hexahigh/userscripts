@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://*.inschool.visma.no/*
 // @grant       none
-// @version     1.1
+// @version     1.2
 // @author      Boofdev
 // @description Fixes various issues on InSchool
 // @updateURL   https://us.080609.xyz/scripts/inschool.user.js
@@ -12,6 +12,18 @@
 // ==/UserScript==
 
 import styles from './inschool.css';
+import langConfig from './inschool.lang.json';
+import { createLocalization } from '../util/localize';
+
+const i18n = createLocalization(langConfig);
+
+// Detect language from html lang attribute and set accordingly
+const siteLang = document.documentElement.lang;
+if (siteLang === 'no') {
+  i18n.setLanguage('no');
+} else {
+  i18n.setLanguage('en');
+}
 
 (function () {
   'use strict';
@@ -84,9 +96,16 @@ function weekWarning(): void {
             warningDiv.className = 'week-warning-message';
             warningDiv.style.cssText =
               'display: flex; align-items: center; gap: 8px; padding: 12px; margin-top: 8px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;';
+
+            // Use localization system for warning message
+            const warningText = i18n.getMessage('weekWarning', {
+              viewingWeek: displayedWeek,
+              currentWeek: currentWeek,
+            });
+
             warningDiv.innerHTML = `
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="flex-shrink: 0;"><path fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363t-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3t.488.125t.387.375l9.25 16q.15.25.138.513t-.138.487t-.35.363t-.5.137zM12 18q.425 0 .713-.288T13 17t-.288-.712T12 16t-.712.288T11 17t.288.713T12 18m0-3q.425 0 .713-.288T13 14v-3q0-.425-.288-.712T12 10t-.712.288T11 11v3q0 .425.288.713T12 15"/></svg>
-              <span style="flex: 1;">Warning: You are viewing week ${displayedWeek}, but the current week is ${currentWeek}.</span>
+              <span style="flex: 1;">${warningText}</span>
             `;
             targetElement.insertAdjacentElement('afterend', warningDiv);
           }
@@ -195,7 +214,9 @@ function markBreaks(): void {
         breakEl.className = 'timetable-break';
         breakEl.style.top = `${currentBottom}px`;
         breakEl.style.height = `${gap}px`;
-        breakEl.textContent = `${durationMinutes} min break`;
+        breakEl.textContent = i18n.getMessage('breakDuration', {
+          minutes: durationMinutes,
+        });
 
         itemsContainer.appendChild(breakEl);
       }
