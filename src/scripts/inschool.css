@@ -1,0 +1,43 @@
+/* Example CSS file for InSchool fixes */
+
+/* Fix z-index of timetable "now" line */
+.Timetable-TimetableNowLine {
+  z-index: 1 !important;
+  opacity: 0.8 !important;
+  height: 2px !important;
+}
+
+/* Red diagonal stripes for empty timetable days */
+.empty-timetable-day {
+  background: repeating-linear-gradient(45deg, #ffebee, #ffebee 10px, #ffcdd2 10px, #ffcdd2 20px) !important;
+}
+
+/* Week warning message styling */
+.week-warning-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+}
+
+/* Break indicator styling */
+.timetable-break {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #666;
+  font-size: 0.8em;
+  border-top: 1px dashed #ccc;
+  border-bottom: 1px dashed #ccc;
+  pointer-events: none; /* Let clicks pass through */
+  z-index: 10;
+}

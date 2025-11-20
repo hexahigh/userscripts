@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simon's Userscripts</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin: 30px 0 15px 0;
+      color: #222;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin: 20px 0 10px 0;
+    }
+
+    p, li {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .intro {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      border-left: 4px solid #0066cc;
+    }
+
+    .guide-section {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .guide-section ol, .guide-section ul {
+      margin: 10px 0 10px 20px;
+    }
+
+    .guide-section li {
+      margin-bottom: 8px;
+    }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .scripts-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .scripts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .script-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #0066cc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .script-info h3 {
+      margin: 0 0 5px 0;
+      font-size: 1rem;
+    }
+
+    .script-desc {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .script-version {
+      color: #999;
+      font-size: 0.85rem;
+      margin-top: 3px;
+    }
+
+    .install-link {
+      display: inline-block;
+      background: #0066cc;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+      margin-left: 15px;
+      flex-shrink: 0;
+    }
+
+    .install-link:hover {
+      background: #0052a3;
+      text-decoration: none;
+    }
+
+    .font-bold {
+      font-weight: bold;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 15px 0;
+      font-size: 0.9rem;
+    }
+
+    .success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 15px 0;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+      }
+
+      .script-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .install-link {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simon's Userscripts</h1>
+    
+    <div class="intro">
+      <p>A collection of userscripts made by me. Install any of these scripts using Violentmonkey or Tampermonkey.<br><span class="font-bold">Read install instructions below.</span></p>
+    </div>
+
+    {% if scripts.size > 0 %}
+      <div class="scripts-grid">
+        {% for script in scripts %}
+          <div class="script-item">
+            <div class="script-info">
+              <h3>{{ script.name }}</h3>
+              <p class="script-desc">{{ script.description }}</p>
+              {% if script.version %}
+                <p class="script-version">v{{ script.version }}</p>
+              {% endif %}
+            </div>
+            <a href="{{ script.outfile }}" class="install-link">Install</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align: center; color: #999; padding: 30px;">No userscripts found.</p>
+    {% endif %}
+
+    <h2>Installation Guide</h2>
+
+    <div class="guide-section">
+      <h3>Step 1: Install Violentmonkey or Tampermonkey</h3>
+      <p>Violentmonkey and Tampermonkey are browser extensions that allow you to run userscripts. Download for your browser:</p>
+      <ul>
+        <li><strong>Chrome/Edge/Brave:</strong> <a href="https://chrome.google.com/webstore/detail/violent-monkey/jinjaccalgkegednnccohejagnlnfdag" target="_blank">Get Violentmonkey from Chrome Web Store</a></li>
+        <li><strong>Firefox:</strong> <a href="https://addons.mozilla.org/firefox/addon/violentmonkey/" target="_blank">Get Violentmonkey from Firefox Add-ons</a></li>
+        <li><strong>Safari:</strong> <a href="https://apps.apple.com/app/tampermonkey/id6738342400" target="_blank">Get Tampermonkey from App Store</a></li>
+      </ul>
+      <div class="success">
+        Once installed, you'll see the Violentmonkey/Tampermonkey icon in your browser toolbar or in the extensions menu.
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h3>Step 2: Install a Userscript</h3>
+      <ol>
+        <li>Click on a script's <strong>Install</strong> button above, or directly visit the <code>.js</code> file in your browser.</li>
+        <li>Violentmonkey will show an installation dialog displaying the script's permissions and metadata.</li>
+        <li>Review the script details and click <strong>Confirm Installation</strong>.</li>
+        <li>The script is now active! You'll see a notification once it's ready.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h3>Step 3: Manage Your Scripts</h3>
+      <p>Click the Violentmonkey icon in your toolbar to:</p>
+      <ul>
+        <li><strong>Enable/Disable</strong> scripts individually</li>
+        <li><strong>Edit</strong> scripts to customize their behavior</li>
+        <li><strong>Delete</strong> scripts you no longer want</li>
+        <li>View <strong>script logs</strong> for debugging</li>
+      </ul>
+    </div>
+
+    <div class="guide-section">
+      <h3>Troubleshooting</h3>
+      <ul>
+        <li><strong>Script not running?</strong> Check that Violentmonkey is enabled in your browser settings, and that the script is enabled in the Violentmonkey dashboard.</li>
+        <li><strong>Script causing issues?</strong> Temporarily disable it from the Violentmonkey menu to test.</li>
+        <li><strong>Update check:</strong> Violentmonkey can auto-check for updates. Enable this in Violentmonkey settings.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
