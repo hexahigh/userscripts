@@ -4,33 +4,36 @@
 
 export type LanguageCode = 'en' | 'no';
 
-export interface LocalizationConfig {
-  defaultLang: string | LanguageCode;
-  messages: Record<string, Record<string, string>>;
+export interface LocalizationConfig<Lang extends string = string, Keys extends string = string> {
+  defaultLang: Lang;
+  messages: Record<Lang, Record<Keys, string>>;
 }
 
-class Localization {
-  private config: LocalizationConfig;
-  private currentLang: LanguageCode;
+type Languages<T extends LocalizationConfig> = keyof T['messages'];
+type MessageKeys<T extends LocalizationConfig> = keyof T['messages'][keyof T['messages']];
 
-  constructor(config: LocalizationConfig) {
+class Localization<T extends LocalizationConfig> {
+  private config: T;
+  private currentLang: Languages<T>;
+
+  constructor(config: T) {
     this.config = config;
-    this.currentLang = (config.defaultLang as LanguageCode) || 'en';
+    this.currentLang = config.defaultLang as Languages<T>;
   }
 
   /**
    * Set the current language
    */
-  setLanguage(lang: string | LanguageCode): void {
-    if (this.config.messages[lang]) {
-      this.currentLang = lang as LanguageCode;
+  setLanguage(lang: Languages<T>): void {
+    if (this.config.messages[lang as string]) {
+      this.currentLang = lang;
     }
   }
 
   /**
    * Get the current language
    */
-  getLanguage(): LanguageCode {
+  getLanguage(): Languages<T> {
     return this.currentLang;
   }
 
@@ -40,14 +43,14 @@ class Localization {
    * @param variables Object containing variables to interpolate in the format {variableName: value}
    * @returns The localized message with interpolated variables
    */
-  getMessage(key: string, variables?: Record<string, string | number>): string {
-    const messages = this.config.messages[this.currentLang];
-    let message = messages?.[key] ?? messages?.[key];
+  getMessage(key: MessageKeys<T>, variables?: Record<string, string | number>): string {
+    const messages = this.config.messages[this.currentLang as string];
+    let message = messages?.[key as string];
 
     if (!message) {
       // Fallback to default language if not found
-      const defaultMessages = this.config.messages[this.config.defaultLang];
-      message = defaultMessages?.[key] ?? key;
+      const defaultMessages = this.config.messages[this.config.defaultLang as string];
+      message = defaultMessages?.[key as string] ?? (key as string);
     }
 
     // Interpolate variables if provided
@@ -75,15 +78,15 @@ class Localization {
   /**
    * Get all available languages
    */
-  getAvailableLanguages(): LanguageCode[] {
-    return Object.keys(this.config.messages) as LanguageCode[];
+  getAvailableLanguages(): Languages<T>[] {
+    return Object.keys(this.config.messages) as Languages<T>[];
   }
 }
 
 /**
  * Create a new Localization instance
  */
-export function createLocalization(config: LocalizationConfig): Localization {
+export function createLocalization<T extends LocalizationConfig>(config: T): Localization<T> {
   return new Localization(config);
 }
 
