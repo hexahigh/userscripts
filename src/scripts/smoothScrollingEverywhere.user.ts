@@ -13,6 +13,7 @@
 
 import Lenis from 'lenis';
 import styles from 'lenis/dist/lenis.css';
+import { addGlobalCSS } from '../util';
 
 (function () {
   'use strict';
@@ -26,10 +27,7 @@ import styles from 'lenis/dist/lenis.css';
       node.classList.contains('dropdown-content'),
   });
 
-  // Add CSS to ensure smooth scrolling fallback
-  const style = document.createElement('style');
-  style.appendChild(document.createTextNode(styles));
-  document.head.appendChild(style);
+  addGlobalCSS(styles);
 
   console.log('Lenis smooth scrolling initialized');
 })();

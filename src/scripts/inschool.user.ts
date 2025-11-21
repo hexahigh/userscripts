@@ -14,6 +14,7 @@
 import styles from './inschool.css';
 import langConfig from './inschool.lang.json';
 import { createLocalization } from '../util/localize';
+import { addGlobalCSS } from '../util';
 
 const i18n = createLocalization(langConfig);
 
@@ -32,7 +33,7 @@ if (siteLang === 'no') {
   let debounceTimer: number | null = null;
 
   function initialize() {
-    applyCSS();
+    addGlobalCSS(styles);
     weekWarning();
     markEmptyDays();
     markBreaks();
@@ -118,12 +119,6 @@ function weekWarning(): void {
       }
     }
   }
-}
-
-function applyCSS(): void {
-  const style = document.createElement('style');
-  style.appendChild(document.createTextNode(styles));
-  (document.head || document.documentElement).appendChild(style);
 }
 
 function getISOWeekNumber(date: Date): number {
