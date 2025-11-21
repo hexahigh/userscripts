@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Liquid } from 'liquidjs';
+import cleanCSS from 'clean-css';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,8 +21,10 @@ const cssPlugin = {
   setup(build) {
     build.onLoad({ filter: /\.css$/ }, async (args) => {
       const css = await fs.promises.readFile(args.path, 'utf8');
+      // Minify the CSS by removing comments and excess whitespace
+      const minified = new cleanCSS({}).minify(css).styles;
       return {
-        contents: `export default ${JSON.stringify(css)}`,
+        contents: `export default ${JSON.stringify(minified)};`,
         loader: 'js',
       };
     });
