@@ -57,15 +57,15 @@ function createCssTextPlugin(): Plugin {
  */
 function generateBanner(header: Record<string, unknown>): string {
   const lines: string[] = ['// ==UserScript=='];
-  
+
   // Calculate max key length for alignment
   const maxKeyLength = Math.max(...Object.keys(header).map((key) => key.length)) + 1;
-  
+
   for (const [key, value] of Object.entries(header)) {
     if (value === undefined) continue;
-    
+
     const addSpaces = ' '.repeat(maxKeyLength - key.length);
-    
+
     if (Array.isArray(value)) {
       for (const v of value) {
         const stringValue = Array.isArray(v) ? v.join(' ') : v === true ? '' : String(v);
@@ -76,7 +76,7 @@ function generateBanner(header: Record<string, unknown>): string {
       lines.push(`// @${key}${addSpaces}${stringValue}`);
     }
   }
-  
+
   lines.push('// ==/UserScript==');
   return lines.join('\n');
 }
@@ -86,7 +86,7 @@ function generateBanner(header: Record<string, unknown>): string {
  */
 function createUserscriptHeaderPlugin(entry: UserscriptEntry): PluginOption {
   const banner = generateBanner(entry.header);
-  
+
   return {
     name: 'userscript-header',
     generateBundle(options, bundle) {
@@ -102,35 +102,32 @@ function createUserscriptHeaderPlugin(entry: UserscriptEntry): PluginOption {
 /**
  * Build Vite configuration for a userscript
  */
-export async function createViteConfig(
-  entry: UserscriptEntry,
-  outDir: string
-): Promise<InlineConfig> {
-  const plugins: PluginOption[] = [
-    createCssTextPlugin(),
-  ];
-  
+export async function createViteConfig(entry: UserscriptEntry, outDir: string): Promise<InlineConfig> {
+  const plugins: PluginOption[] = [createCssTextPlugin()];
+
   const buildOptions = entry.buildOptions;
-  
+
   // Add Svelte plugin if requested
   if (buildOptions.plugins?.includes('svelte')) {
     const { svelte } = await import('@sveltejs/vite-plugin-svelte');
-    plugins.push(svelte({
-      compilerOptions: {
-        // Required for userscripts - output as IIFE-compatible code
-        css: 'injected',
-      },
-      // Emit CSS in JS for userscripts
-      emitCss: false,
-    }));
+    plugins.push(
+      svelte({
+        compilerOptions: {
+          // Required for userscripts - output as IIFE-compatible code
+          css: 'injected',
+        },
+        // Emit CSS in JS for userscripts
+        emitCss: false,
+      })
+    );
   }
-  
+
   // Add Tailwind plugin if requested
   if (buildOptions.plugins?.includes('tailwind')) {
     const tailwindcss = (await import('@tailwindcss/vite')).default;
     plugins.push(tailwindcss());
   }
-  
+
   // Add userscript header plugin
   plugins.push(createUserscriptHeaderPlugin(entry));
 
@@ -161,6 +158,7 @@ export async function createViteConfig(
     resolve: {
       alias: {
         '@': path.resolve(rootDir, 'src'),
+        '@util': path.resolve(rootDir, 'src/util'),
       },
     },
   };

@@ -9,21 +9,112 @@
 // @updateURL   https://us.080609.xyz/scripts/inschool.user.js
 // @downloadURL https://us.080609.xyz/scripts/inschool.user.js
 // @homepageURL https://us.080609.xyz
+// @xBuildOptions {"plugins": ["svelte", "tailwind"]}
 // ==/UserScript==
 
 import styles from './inschool.css';
 import langConfig from './inschool.lang.json';
-import { createLocalization } from '../util/localize';
-import { addGlobalCSS } from '../util';
+import { createLocalization } from '@util/localize';
+import { addGlobalCSS } from '@util';
+import OptionsMenu from './OptionsMenu.svelte';
+
+type Settings = {
+  enabledFeatures: {
+    weekWarning: boolean;
+    markEmptyDays: boolean;
+    markBreaks: boolean;
+  };
+  forcedLanguage: 'auto' | 'no' | 'en';
+  borderSides: {
+    top: boolean;
+    right: boolean;
+    bottom: boolean;
+    left: boolean;
+  };
+};
+
+let currentSettings: Settings = {
+  enabledFeatures: {
+    weekWarning: true,
+    markEmptyDays: true,
+    markBreaks: true,
+  },
+  forcedLanguage: 'auto',
+  borderSides: {
+    top: false,
+    right: false,
+    bottom: false,
+    left: true,
+  },
+};
+
+function loadSettings() {
+  const stored = localStorage.getItem('inschool-options');
+  if (stored) {
+    try {
+      currentSettings = { ...currentSettings, ...JSON.parse(stored) };
+    } catch (e) {
+      console.error('Failed to parse settings', e);
+    }
+  }
+}
 
 const i18n = createLocalization(langConfig);
 
 // Detect language from html lang attribute and set accordingly
-const siteLang = document.documentElement.lang;
-if (siteLang === 'no') {
-  i18n.setLanguage('no');
-} else {
-  i18n.setLanguage('en');
+function setLanguage() {
+  if (currentSettings.forcedLanguage === 'auto') {
+    const siteLang = document.documentElement.lang;
+    if (siteLang === 'no') {
+      i18n.setLanguage('no');
+    } else {
+      i18n.setLanguage('en');
+    }
+  } else {
+    i18n.setLanguage(currentSettings.forcedLanguage);
+  }
+}
+
+function mountOptionsMenu() {
+  const navElement = document.querySelector('header.topmenu nav.navbar-sub-menu ul.nav.navbar-menu.second-level');
+  if (navElement) {
+    const li = document.createElement('li');
+    li.className = 'nav-item';
+    navElement.appendChild(li);
+    new OptionsMenu({ target: li });
+  }
+}
+
+function applyBorderSettings() {
+  const timetableItems = document.querySelectorAll<HTMLDivElement>(
+    'div.Timetable-TimetableItem.Timetable-TimetableItem-m'
+  );
+  timetableItems.forEach((item) => {
+    // Get the border color from border-left
+    const computedStyle = getComputedStyle(item);
+    const borderColor = computedStyle.borderLeftColor;
+    const borderWidth = computedStyle.borderLeftWidth;
+
+    // Reset all borders
+    item.style.borderTop = '';
+    item.style.borderRight = '';
+    item.style.borderBottom = '';
+    item.style.borderLeft = '';
+
+    // Apply selected borders
+    if (currentSettings.borderSides.top) {
+      item.style.borderTop = `${borderWidth} solid ${borderColor}`;
+    }
+    if (currentSettings.borderSides.right) {
+      item.style.borderRight = `${borderWidth} solid ${borderColor}`;
+    }
+    if (currentSettings.borderSides.bottom) {
+      item.style.borderBottom = `${borderWidth} solid ${borderColor}`;
+    }
+    if (currentSettings.borderSides.left) {
+      item.style.borderLeft = `${borderWidth} solid ${borderColor}`;
+    }
+  });
 }
 
 let academicYear: AcademicYear | null = null;
@@ -57,11 +148,31 @@ function lightenColor(color: string, percent: number = 20): string {
   let debounceTimer: number | null = null;
 
   async function initialize() {
+    loadSettings();
+    setLanguage();
     academicYear = await getAcademicYear();
     addGlobalCSS(styles);
-    weekWarning();
-    markEmptyDays();
-    markBreaks();
+    mountOptionsMenu();
+
+    // Listen for settings changes
+    window.addEventListener('inschool-settings-changed', (event: any) => {
+      const newSettings: Settings = event.detail;
+      const languageChanged = currentSettings.forcedLanguage !== newSettings.forcedLanguage;
+      currentSettings = newSettings;
+      if (languageChanged) {
+        setLanguage();
+      }
+      // Reapply all features
+      if (currentSettings.enabledFeatures.weekWarning) weekWarning();
+      if (currentSettings.enabledFeatures.markEmptyDays) markEmptyDays();
+      if (currentSettings.enabledFeatures.markBreaks) markBreaks();
+      applyBorderSettings();
+    });
+
+    if (currentSettings.enabledFeatures.weekWarning) weekWarning();
+    if (currentSettings.enabledFeatures.markEmptyDays) markEmptyDays();
+    if (currentSettings.enabledFeatures.markBreaks) markBreaks();
+    applyBorderSettings();
 
     const observer = new MutationObserver(() => {
       if (isUpdating) return;
@@ -74,9 +185,10 @@ function lightenColor(color: string, percent: number = 20): string {
       debounceTimer = window.setTimeout(() => {
         isUpdating = true;
 
-        weekWarning();
-        markEmptyDays();
-        markBreaks();
+        if (currentSettings.enabledFeatures.weekWarning) weekWarning();
+        if (currentSettings.enabledFeatures.markEmptyDays) markEmptyDays();
+        if (currentSettings.enabledFeatures.markBreaks) markBreaks();
+        applyBorderSettings();
 
         isUpdating = false;
         debounceTimer = null;
@@ -99,6 +211,12 @@ function lightenColor(color: string, percent: number = 20): string {
 })();
 
 function weekWarning(): void {
+  const existingWarning = document.querySelector('.week-warning-message');
+  if (!currentSettings.enabledFeatures.weekWarning) {
+    if (existingWarning) existingWarning.remove();
+    return;
+  }
+
   const weekElement = document.querySelector<HTMLHeadingElement>('h2.subheading2.userTimetable_currentWeek');
   if (weekElement) {
     // Parse the week number from the text content (first numbers encountered)
@@ -109,9 +227,6 @@ function weekWarning(): void {
     if (displayedWeek !== null) {
       // Calculate the current ISO week number
       const currentWeek = getISOWeekNumber(new Date());
-
-      // Check if warning already exists
-      const existingWarning = document.querySelector('.week-warning-message');
 
       if (displayedWeek !== currentWeek) {
         // Only add warning if it doesn't exist
@@ -160,6 +275,18 @@ function getISOWeekNumber(date: Date): number {
 }
 
 function markEmptyDays(): void {
+  if (!currentSettings.enabledFeatures.markEmptyDays) {
+    // Remove all markings
+    const timetableDays = document.querySelectorAll<HTMLDivElement>('div.Timetable-TimetableDays_day');
+    timetableDays.forEach((day) => {
+      day.classList.remove('empty-timetable-day', 'holiday-timetable-day');
+      day.style.background = '';
+      const holidayText = day.querySelector('.holiday-text');
+      if (holidayText) holidayText.remove();
+    });
+    return;
+  }
+
   if (!academicYear) return;
   const timetableDays = document.querySelectorAll<HTMLDivElement>('div.Timetable-TimetableDays_day');
 
@@ -237,6 +364,13 @@ function markEmptyDays(): void {
 }
 
 function markBreaks(): void {
+  if (!currentSettings.enabledFeatures.markBreaks) {
+    // Remove all break markings
+    const existingBreaks = document.querySelectorAll('.timetable-break');
+    existingBreaks.forEach((el) => el.remove());
+    return;
+  }
+
   const timetableDays = document.querySelectorAll<HTMLDivElement>('div.Timetable-TimetableDays_day');
 
   timetableDays.forEach((day) => {

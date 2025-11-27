@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "ESNext",
     "lib": ["ES2020", "DOM"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,7 +12,12 @@
     "declaration": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["tampermonkey"]
+    "types": ["tampermonkey"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@util": ["./src/util/index"],
+      "@util/*": ["./src/util/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "scripts"]
