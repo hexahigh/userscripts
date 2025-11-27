@@ -19,7 +19,18 @@ function extractBuildOptions(source: string): BuildOptions {
   const buildOptionsMatch = source.match(/\/\/\s*@xBuildOptions\s+(\{.*\})/);
   if (buildOptionsMatch) {
     try {
-      return JSON.parse(buildOptionsMatch[1]) as BuildOptions;
+      const parsed = JSON.parse(buildOptionsMatch[1]);
+      // Validate the structure to prevent prototype pollution
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        console.warn('Invalid @xBuildOptions format, using defaults');
+        return {};
+      }
+      // Only extract expected properties
+      const options: BuildOptions = {};
+      if (Array.isArray(parsed.plugins)) {
+        options.plugins = parsed.plugins.filter((p: unknown) => typeof p === 'string');
+      }
+      return options;
     } catch {
       console.warn('Failed to parse @xBuildOptions, using defaults');
     }

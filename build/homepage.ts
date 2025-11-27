@@ -243,17 +243,18 @@ export async function generateHomepage(scriptsMeta: ScriptMeta[]): Promise<void>
     const tempModuleName = `homepage-ssr-${Date.now()}.mjs`;
     const tempModulePath = path.join(tempDir, tempModuleName);
     
-    // Validate path is within expected directory
-    const normalizedPath = path.normalize(tempModulePath);
-    if (!normalizedPath.startsWith(tempDir)) {
+    // Validate path is within expected directory using resolved paths
+    const resolvedTempDir = path.resolve(tempDir);
+    const resolvedTempPath = path.resolve(tempModulePath);
+    if (!resolvedTempPath.startsWith(resolvedTempDir + path.sep)) {
       throw new Error('Invalid temp file path');
     }
     
     fs.writeFileSync(tempModulePath, compiled.js.code);
     
     try {
-      // Dynamic import the compiled module
-      const module = await import(`file://${tempModulePath}`);
+      // Dynamic import the compiled module (path is validated above)
+      const module = await import(`file://${resolvedTempPath}`);
       const Component = module.default;
       
       // Render with props using Svelte 5 server render
