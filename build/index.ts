@@ -7,9 +7,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { build as viteBuild } from 'vite';
-import { Liquid } from 'liquidjs';
 import { parseUserscript } from './parser.js';
 import { createViteConfig, rootDir } from './vite-config.js';
+import { generateHomepage } from './homepage.js';
 import type { ScriptMeta, UserscriptEntry } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -90,23 +90,6 @@ async function buildUserscript(entry: UserscriptEntry): Promise<ScriptMeta | nul
 }
 
 /**
- * Generate index.html from Liquid template
- */
-async function generateIndexHtml(scriptsMeta: ScriptMeta[]): Promise<void> {
-  try {
-    const engine = new Liquid();
-    const templatePath = path.join(rootDir, 'src', 'index.liquid');
-    const templateContent = fs.readFileSync(templatePath, 'utf8');
-    
-    const html = await engine.parseAndRender(templateContent, { scripts: scriptsMeta });
-    fs.writeFileSync(path.join(distDir, 'index.html'), html, 'utf8');
-    console.log('✓ Generated dist/index.html');
-  } catch (err) {
-    console.error('✗ Error generating index.html:', err);
-  }
-}
-
-/**
  * Main build function
  */
 async function build(): Promise<void> {
@@ -129,7 +112,7 @@ async function build(): Promise<void> {
   }
   
   console.log(`\nBuilt ${scriptsMeta.length} scripts successfully`);
-  await generateIndexHtml(scriptsMeta);
+  await generateHomepage(scriptsMeta);
 }
 
 /**
