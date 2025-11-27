@@ -36,16 +36,38 @@ function createCssTextPlugin(): Plugin {
       }
       return null;
     },
-    transform(code, id) {
+    async transform(code, id) {
       // Transform CSS files with ?raw to export minified CSS string
       if (id.endsWith('.css?raw')) {
         const realId = id.replace('?raw', '');
         const cssCode = fs.readFileSync(realId, 'utf8');
-        const minified = new CleanCSS({}).minify(cssCode).styles;
-        return {
-          code: `export default ${JSON.stringify(minified)};`,
-          map: null,
-        };
+
+        // Try to process with PostCSS (Tailwind + Autoprefixer). If PostCSS is not available,
+        // fall back to minifying the raw CSS.
+        try {
+          const postcssModule = await import('postcss');
+          const tailwind = (await import('@tailwindcss/postcss'))?.default || (await import('@tailwindcss/postcss'));
+          const autoprefixer = (await import('autoprefixer'))?.default || (await import('autoprefixer'));
+
+          const processor = postcssModule.default([(tailwind as any)(), (autoprefixer as any)()]);
+          const result = await processor.process(cssCode, { from: realId });
+          const processedCss = result.css;
+          const minified = new CleanCSS({}).minify(processedCss).styles;
+
+          return {
+            code: `export default ${JSON.stringify(minified)};`,
+            map: null,
+          };
+        } catch (e) {
+          // If PostCSS processing fails, emit a warning and fall back to minifying raw CSS.
+          // eslint-disable-next-line no-console
+          console.warn('PostCSS processing failed, falling back to raw CSS minify:', e);
+          const minified = new CleanCSS({}).minify(cssCode).styles;
+          return {
+            code: `export default ${JSON.stringify(minified)};`,
+            map: null,
+          };
+        }
       }
       return null;
     },

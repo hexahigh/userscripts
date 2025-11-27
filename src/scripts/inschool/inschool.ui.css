@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+@plugin "daisyui" {
+  themes: light --default;
+}
+
+/* UI styles for the userscript UI. This file will be injected into the Shadow DOM so
+   DaisyUI / Tailwind utilities are available only inside the userscript components. */
+
+/* Optional small overrides for the UI inside the Shadow DOM */
+.inschool-host {
+  display: block;
+}

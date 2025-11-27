@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://*.inschool.visma.no/*
 // @grant       none
-// @version     1.3
+// @version     1.4
 // @author      Boofdev
 // @description Fixes various issues on InSchool
 // @updateURL   https://us.080609.xyz/scripts/inschool.user.js
@@ -12,10 +12,12 @@
 // @xBuildOptions {"plugins": ["svelte", "tailwind"]}
 // ==/UserScript==
 
-import styles from './inschool.css';
+import fixStyles from './inschool.fixes.css';
+import uiStyles from './inschool.ui.css';
 import langConfig from './inschool.lang.json';
 import { createLocalization } from '@util/localize';
 import { addGlobalCSS } from '@util';
+import { mount } from 'svelte';
 import OptionsMenu from './OptionsMenu.svelte';
 
 type Settings = {
@@ -32,6 +34,8 @@ type Settings = {
     left: boolean;
   };
 };
+
+let optionMenuMounted = false;
 
 let currentSettings: Settings = {
   enabledFeatures: {
@@ -81,7 +85,31 @@ function mountOptionsMenu() {
     const li = document.createElement('li');
     li.className = 'nav-item';
     navElement.appendChild(li);
-    new OptionsMenu({ target: li });
+
+    // Create a host element and attach a Shadow Root to isolate UI styles
+    const host = document.createElement('div');
+    host.className = 'inschool-host';
+    li.appendChild(host);
+
+    // Ensure the host is on top and accepts pointer events
+    host.style.position = 'relative';
+    host.style.zIndex = '99999';
+    host.style.pointerEvents = 'auto';
+
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    // Inject the compiled Tailwind / DaisyUI CSS into the shadow root so
+    // DaisyUI classes are available only inside the userscript UI.
+    const styleEl = document.createElement('style');
+    styleEl.textContent = uiStyles;
+    shadow.appendChild(styleEl);
+
+    // Mount point inside shadow root
+    const mountEl = document.createElement('div');
+    shadow.appendChild(mountEl);
+
+    mount(OptionsMenu, { target: mountEl });
+    optionMenuMounted = true;
   }
 }
 
@@ -92,8 +120,19 @@ function applyBorderSettings() {
   timetableItems.forEach((item) => {
     // Get the border color from border-left
     const computedStyle = getComputedStyle(item);
-    const borderColor = computedStyle.borderLeftColor;
-    const borderWidth = computedStyle.borderLeftWidth;
+    let borderColor = computedStyle.borderLeftColor;
+    let borderWidth = computedStyle.borderLeftWidth;
+
+    if (item.dataset.originalBorderColor) {
+      borderColor = item.dataset.originalBorderColor;
+    }
+    if (item.dataset.originalBorderWidth) {
+      borderWidth = item.dataset.originalBorderWidth;
+    }
+
+    // Save the original border data as a data attribute
+    item.dataset.originalBorderColor = borderColor;
+    item.dataset.originalBorderWidth = borderWidth;
 
     // Reset all borders
     item.style.borderTop = '';
@@ -151,8 +190,7 @@ function lightenColor(color: string, percent: number = 20): string {
     loadSettings();
     setLanguage();
     academicYear = await getAcademicYear();
-    addGlobalCSS(styles);
-    mountOptionsMenu();
+    addGlobalCSS(fixStyles);
 
     // Listen for settings changes
     window.addEventListener('inschool-settings-changed', (event: any) => {
@@ -176,6 +214,8 @@ function lightenColor(color: string, percent: number = 20): string {
 
     const observer = new MutationObserver(() => {
       if (isUpdating) return;
+
+      if (!optionMenuMounted) mountOptionsMenu();
 
       // Debounce rapid mutations
       if (debounceTimer !== null) {

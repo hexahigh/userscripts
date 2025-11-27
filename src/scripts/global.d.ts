@@ -4,6 +4,13 @@ declare module '*.css' {
   export default content;
 }
 
+// Type definitions for Svelte components
+declare module '*.svelte' {
+  import type { Component } from 'svelte';
+  const component: Component<any, any, any>;
+  export default component;
+}
+
 // Eruda plugins lack type definitions
 declare module 'eruda-monitor';
 declare module 'eruda-features';
