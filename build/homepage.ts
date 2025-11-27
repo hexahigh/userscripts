@@ -233,36 +233,51 @@ export async function generateHomepage(scriptsMeta: ScriptMeta[]): Promise<void>
       name: 'Index',
     });
     
-    // Write compiled code to temp file
+    // Write compiled code to temp file in a sandboxed location
     const tempDir = path.join(rootDir, '.temp');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
     
-    const tempModulePath = path.join(tempDir, 'homepage-ssr.mjs');
+    // Use a unique filename to avoid module cache issues
+    const tempModuleName = `homepage-ssr-${Date.now()}.mjs`;
+    const tempModulePath = path.join(tempDir, tempModuleName);
+    
+    // Validate path is within expected directory
+    const normalizedPath = path.normalize(tempModulePath);
+    if (!normalizedPath.startsWith(tempDir)) {
+      throw new Error('Invalid temp file path');
+    }
+    
     fs.writeFileSync(tempModulePath, compiled.js.code);
     
-    // Dynamic import the compiled module
-    const module = await import(`file://${tempModulePath}?t=${Date.now()}`);
-    const Component = module.default;
-    
-    // Render with props using Svelte 5 server render
-    const result = render(Component, {
-      props: { scripts: scriptsMeta },
-    });
-    
-    // Clean the SSR output and wrap in HTML template
-    const cleanedBody = cleanSsrOutput(result.body);
-    const fullHtml = createHtmlTemplate(cleanedBody);
-    
-    // Write the final HTML
-    const distDir = path.join(rootDir, 'dist');
-    fs.writeFileSync(path.join(distDir, 'index.html'), fullHtml, 'utf8');
-    
-    // Clean up temp file
-    fs.unlinkSync(tempModulePath);
-    
-    console.log('✓ Generated dist/index.html (Svelte SSR)');
+    try {
+      // Dynamic import the compiled module
+      const module = await import(`file://${tempModulePath}`);
+      const Component = module.default;
+      
+      // Render with props using Svelte 5 server render
+      const result = render(Component, {
+        props: { scripts: scriptsMeta },
+      });
+      
+      // Clean the SSR output and wrap in HTML template
+      const cleanedBody = cleanSsrOutput(result.body);
+      const fullHtml = createHtmlTemplate(cleanedBody);
+      
+      // Write the final HTML
+      const distDir = path.join(rootDir, 'dist');
+      fs.writeFileSync(path.join(distDir, 'index.html'), fullHtml, 'utf8');
+      
+      console.log('✓ Generated dist/index.html (Svelte SSR)');
+    } finally {
+      // Clean up temp file asynchronously to avoid issues with module cache
+      try {
+        fs.unlinkSync(tempModulePath);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
   } catch (err) {
     console.error('✗ Error generating index.html with Svelte SSR:', err);
     // Fallback to Liquid template

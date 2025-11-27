@@ -1,5 +1,10 @@
 <script lang="ts">
-  import type { ScriptMeta } from './types';
+  interface ScriptMeta {
+    name: string;
+    description: string;
+    version: string;
+    outfile: string;
+  }
   
   interface Props {
     scripts: ScriptMeta[];

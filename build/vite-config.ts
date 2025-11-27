@@ -5,24 +5,20 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import CleanCSS from 'clean-css';
 import type { InlineConfig, PluginOption, Plugin } from 'vite';
 import type { UserscriptEntry } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const require = createRequire(import.meta.url);
 
 /**
  * Create a custom CSS plugin that imports CSS as minified strings
  * Returns CSS content directly as a JS string export
  */
 function createCssTextPlugin(): Plugin {
-  // Load CleanCSS synchronously
-  const CleanCSS = require('clean-css');
-  
   return {
     name: 'css-text',
     enforce: 'pre',
